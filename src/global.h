@@ -45,7 +45,7 @@ struct Parameters {
     const double cost_logistic_slope2 = 0.5;
     // const double maze_logistic_slope = 0.5;
     const bool write_heatmap = false;
-    std::string heatmap_file = "/home/b09901066/ISPD-NTUEE/NTUGR/heatmaps/heatmap.txt";
+    std::string heatmap_file = "/home/b09901066/ISPD-NTUEE/NTUGR_v2/heatmaps/heatmap.txt";
     std::string capacity_file = "/home/b09901066/ISPD-NTUEE/NTUGR/heatmaps/capacity.txt";
 
     double UnitViaCost = 4.0; // have to be changed to the actual value
@@ -64,8 +64,9 @@ struct Parameters {
                 net_file = argv[++i];
             } else if (strcmp(argv[i], "-output") == 0) {
                 out_file = argv[++i];
-            // } else if (strcmp(argv[i], "-threads") == 0) {
-            //     threads = std::stoi(argv[++i]);
+            } else if (strcmp(argv[i], "-def") == 0 || strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "-sdc") == 0) {
+                // pass these args
+                ++i;
             } else {
                 cout << "Unrecognized arg..." << '\n';
                 cout << argv[i] << '\n';
