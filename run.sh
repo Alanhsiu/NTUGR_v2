@@ -1,11 +1,20 @@
-mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ../src && make
+# mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ../src && make
+mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug ../src && make
 
-input_path="/docker_data/b09901066/input"
-output_PR_path="/docker_data/b09901066/output"
-output_log_path="/home/b09901066/ISPD-NTUEE/NTUGR/output"
-echo "Running mempool_tile"
-./route -cap $input_path/mempool_tile.cap -net $input_path/mempool_tile.net -output $output_PR_path/mempool_tile.PR_output > $output_log_path/mempool_tile.log
+current_path="/home/b09901066/ISPD-NTUEE/NTUGR_v2"
+docker_data_path="/docker_data/b09901066"
 
-cd ..
-cd benchmark/evaluation_script
-bash evaluation.sh
+input_path=$current_path"/input"
+output_PR_path=$current_path"/output"
+output_log_path=$current_path"/log"
+
+echo "Running example"
+./route -def example.def -v example.v.gz -sdc example.sdc -cap $input_path/example.cap -net $input_path/example.net -output $output_PR_path/example.route > $output_log_path/example.log
+
+# echo "Running ariane"
+# ./route -cap $input_path/ariane.cap -net $input_path/ariane.net -output $output_PR_path/ariane.route > $output_log_path/ariane.log
+
+# cd ..
+# cd evaluation/
+# chmod +x evaluation.sh
+# bash evaluation.sh
