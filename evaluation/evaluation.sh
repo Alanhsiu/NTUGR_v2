@@ -1,6 +1,10 @@
-data_list=("ariane")
-input_path="/raid/rliang/ISPD25_contest"
-output_path="/raid/rliang/ISPD25_contest/results"
+data_list=("example")
+
+# root_path is the previous directory of the current directory
+root_path=$(dirname $(pwd))
+input_path=$root_path"/input"
+output_path=$root_path"/output"
+
 for data in "${data_list[@]}"
 do
     # run the whole framework

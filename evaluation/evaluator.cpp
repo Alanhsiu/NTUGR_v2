@@ -426,8 +426,8 @@ bool NVR_DB::read_nets(const char *input)
     } else if (line.find('[') != std::string::npos) { //read pins
       NVR_Net &net = m_nets.back();
       net.set_idx(m_nets.size() - 1);
-      size_t pos = line.find('[');
-      if (pos != std::string::npos) { // Check if '[' is found
+      size_t pos = line.find('[(');
+      if (pos != std::string::npos) { // Check if '[(' is found
             line.erase(0, pos); // Erase everything before (and including) the first '['
       }
       line.erase(std::remove_if(line.begin(), line.end(), [&redundant_chars](char c) {
