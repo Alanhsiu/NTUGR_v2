@@ -84,15 +84,30 @@ The command-line arguments for the global router are as follows:
 
 Note that in this repository, we use simplified input files (.cap, .net) as provided in the ISPD25 contest. We don't use .def, .v, and .sdc files.
 
-### 2. Evaluate the Routing Results
-If you want to evaluate the routing results, use docker to run the evaluation script.
-
-Move the input, output, evaluation directories to docker:
+### 2. Use Docker for Development
+To use the Docker container for development, you can mount the project directory to the container:
 ```bash
-# docker cp input ispd25_container:/app/NTUGR/input
-# docker cp output ispd25_container:/app/NTUGR/output
-# docker cp evaluation ispd25_container:/app/NTUGR/evaluation
-for dir in input output evaluation; do
-    docker cp $dir ispd25_container:/app/NTUGR/
-done
+docker run -it --rm \
+  --gpus all \
+  -v /home/b09901066/ISPD-NTUEE/NTUGR_v2:/app/NTUGR_v2 \
+  --name ispd25_container \
+  ispd25 bash
+```
+
+Alternatively, you can use the extension in Visual Studio Code to develop inside the Docker container.
+See the tutorial [here](https://medium.com/%E5%A4%BE%E7%B8%AB%E4%B8%AD%E6%B1%82%E7%94%9F%E5%AD%98%E7%9A%84%E4%BA%BA%E9%A1%9E/%E4%BD%BF%E7%94%A8visual-studio-code-%E9%81%A0%E7%AB%AF%E6%93%8D%E4%BD%9Cdocker%E7%92%B0%E5%A2%83%E4%B8%8B%E7%9A%84%E6%AA%94%E6%A1%88-ebb35292a5b1).
+
+### 3. Submitting Results
+Use Docker to package the results for submission:
+
+Outside the container:
+```bash
+docker cp build/route ispd25_container:/workspace/router/route
+docker commit ispd25_container ispd_alpha
+```
+
+```bash
+docker login
+docker tag ispd_alpha alanhsiu/ntugr_alpha
+docker push alanhsiu/ntugr_alpha
 ```
