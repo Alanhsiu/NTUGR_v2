@@ -4,3 +4,4 @@ build/
 input/
 output/
 log/
+evaluation/evaluator
