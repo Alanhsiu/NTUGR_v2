@@ -58,5 +58,23 @@
     "cinttypes": "cpp",
     "typeinfo": "cpp"
   },
-  "cmake.sourceDirectory": "/home/b09901066/ISPD-NTUEE/NTUGR_v2/src"
+  "cmake.sourceDirectory": "/home/b09901066/ISPD-NTUEE/NTUGR_v2/src",
+  "cmake.debugConfig": {
+    "args": [
+      "-cap",
+      "../input/ariane.cap",
+      "-net",
+      "../input/ariane.net",
+      "-output",
+      "../output/ariane.route"
+    ]
+    // "args": [
+    //   "-cap",
+    //   "../input/example.cap",
+    //   "-net",
+    //   "../input/example.net",
+    //   "-output",
+    //   "../output/example.route"
+    // ]
+  }
 }
