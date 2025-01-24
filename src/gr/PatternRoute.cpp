@@ -21,7 +21,7 @@ void PatternRoute::constructSteinerTree() {
         }
     } else {
         //
-        int xs[degree * 4]; // xs is 
+        int xs[degree * 4]; // xs is the x coordinates of the access points
         int ys[degree * 4];
         int i = 0;
         for (auto& accessPoint : selectedAccessPoints) {
@@ -170,7 +170,7 @@ void PatternRoute::constructPaths(std::shared_ptr<PatternRoutingNode>& start, st
         childPaths.push_back(mid);
 
         // Add Z-shape paths
-        bool isZShape = true;
+        bool isZShape = false;
         // if(start->x == 0 || start->x == gridGraph.getSize(0) - 1 || end->x == 0 || end->x == gridGraph.getSize(0) - 1) {
         //     isZShape = true;
         // }
