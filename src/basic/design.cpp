@@ -33,13 +33,13 @@ bool Design::readCap(const string& filename) {
     }
     dimension.hEdge.reserve(dimension.x_size);
     int hEdge;
-    for (int i = 0; i < dimension.x_size-1; i++) {
+    for (int i = 0; i < dimension.x_size - 1; i++) {
         fscanf(inputFile, "%d", &hEdge);
         dimension.hEdge.emplace_back(hEdge);
     }
     dimension.vEdge.reserve(dimension.y_size);
     int vEdge;
-    for (int i = 0; i < dimension.y_size-1; i++) {
+    for (int i = 0; i < dimension.y_size - 1; i++) {
         fscanf(inputFile, "%d", &vEdge);
         dimension.vEdge.emplace_back(vEdge);
     }
@@ -61,9 +61,9 @@ bool Design::readCap(const string& filename) {
     return true;
 }
 
-void replaceChars(char *str) {
+void replaceChars(char* str) {
     while (*str != '\0') {
-        if (*str == '[' || *str == ']' || *str == '(' || *str == ')' || *str == ',') {
+        if (*str == '[' || *str == ']' || *str == '(' || *str == ')') {
             *str = ' ';
         }
         str++;
@@ -71,7 +71,6 @@ void replaceChars(char *str) {
 }
 
 bool Design::readNet(const string& filename) {
-
     vector<Net> nets;
     vector<Pin> pins;
     vector<Point> points;
@@ -88,37 +87,43 @@ bool Design::readNet(const string& filename) {
         printf("Error opening file.\n");
         return false;
     }
-    while (fgets(line, sizeof(line), inputFile)){
+    while (fgets(line, sizeof(line), inputFile)) {
         size_t ln = strlen(line) - 1;
-        if (line[ln] == '\n') line[ln] = '\0';
+        if (line[ln] == '\n')
+            line[ln] = '\0';
         string str(line);
-        Net net(net_id++, str);
+        Net net(net_id, str);
         vector<int> pin_ids;
-        fgets(line, sizeof(line), inputFile); // consumes the "("
+        fgets(line, sizeof(line), inputFile);  // skip the first line "(\n"
         while (fgets(line, sizeof(line), inputFile)) {
-            int layer, x, y;
-            if (strcmp(line, ")\n") == 0){
-                break; // end of net
+            string s(line);
+            s.erase(remove(s.begin(), s.end(), ' '), s.end());
+            if (strcmp(s.c_str(), ")\n") == 0) {  // end of net
+                break;
             }
             Pin pin(pin_id++, net_id);
             vector<int> point_ids;
-            replaceChars(line);
-            char *token = strtok(line, " \t\n");
+
+            char* token = strtok(line, ", \t\n");
+            pin.name = token;
+            token = strtok(NULL, ", \t\n");
+            pin.slack = atof(token);
+            token = strtok(NULL, ", \t\n");
+
+            replaceChars(token);
+
+            int layer, x, y;
             while (token != NULL) {
                 layer = atoi(token);
                 token = strtok(NULL, " \t\n");
-                if (token != NULL) {
-                    x = atoi(token);
-                    token = strtok(NULL, " \t\n");
-                } else {
-                    break; 
-                }
-                if (token != NULL) {
-                    y = atoi(token);
-                    token = strtok(NULL, " \t\n");
-                } else {
+                if (token == NULL)
                     break;
-                }
+                x = atoi(token);
+                token = strtok(NULL, " \t\n");
+                if (token == NULL)
+                    break;
+                y = atoi(token);
+                token = strtok(NULL, " \t\n");
                 Point point(point_id++, net_id, layer, x, y);
                 point_ids.push_back(point.id);
                 points.emplace_back(point);
@@ -129,6 +134,7 @@ bool Design::readNet(const string& filename) {
         }
         net.pin_ids = pin_ids;
         nets.emplace_back(net);
+        net_id++;
     }
 
     netlist.n_nets = nets.size();
@@ -137,6 +143,11 @@ bool Design::readNet(const string& filename) {
     netlist.nets = nets;
     netlist.pins = pins;
     netlist.points = points;
+
+    cout << "Number of nets: " << netlist.n_nets << endl;
+    cout << "Number of pins: " << netlist.n_pins << endl;
+    cout << "Number of points: " << netlist.n_points << endl;
+
     fclose(inputFile);
     return true;
 }
