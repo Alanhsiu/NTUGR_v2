@@ -79,7 +79,7 @@ This script compiles the source code and runs the global router on the provided 
 
 The command-line arguments for the global router are as follows:
 ```bash
-./route -def ${design}.def -v ${design}.v.gz -sdc ${design}.sdc -cap ${design}.cap -net ${design}.net -output ${design}.route
+./route -library ${library folder} -def ${design}.def -v ${design}.v.gz -sdc ${design}.sdc -cap ${design}.cap -net ${design}.net -output ${design}.route
 ```
 
 Note that in this repository, we use simplified input files (.cap, .net) as provided in the ISPD25 contest. We don't use .def, .v, and .sdc files.
@@ -106,8 +106,27 @@ docker cp build/route ispd25_container:/workspace/router/route
 docker commit ispd25_container ispd_alpha
 ```
 
+If you want to push the image to Docker Hub:
+
 ```bash
 docker login
 docker tag ispd_alpha alanhsiu/ntugr_alpha
 docker push alanhsiu/ntugr_alpha
+```
+
+If you want to upload the image to Google Drive (use rclone):
+```bash
+docker save ispd_alpha -o ispd_alpha.tar
+./rclone copy ../ispd_alpha.tar gdrive:/ispd25
+```
+
+How to check if the tar file is correct:
+```bash
+docker load -i ispd_alpha.tar
+docker run -it ispd_alpha
+```
+
+If you want to remove a tag:
+```bash
+docker rmi alanhsiu/ntugr_alpha
 ```
