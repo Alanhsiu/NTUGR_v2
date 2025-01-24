@@ -8,146 +8,180 @@
 #include <vector>
 #include "../basic/netlist.h"
 
-using namespace std;
-
-Design::~Design() {
-}
-
-bool Design::readCap(const string& filename) {
+bool Design::readCap(const std::string& filename) {
     FILE* inputFile = fopen(filename.c_str(), "r");
-    char line[1000];
-    if (inputFile == NULL) {
-        printf("Error opening file.\n");
+    if (!inputFile) {
+        std::cerr << "[ERROR] Failed to open CAP file: " << filename << std::endl;
         return false;
     }
-    fscanf(inputFile, "%d %d %d", &dimension.n_layers, &dimension.x_size, &dimension.y_size);
-    // fgets(line, sizeof(line), inputFile)
-    fscanf(inputFile, "%lf %lf", &metrics.UnitLengthWireCost, &metrics.UnitViaCost);
+
+    if (fscanf(inputFile, "%d %d %d", &dimension.n_layers, &dimension.x_size, &dimension.y_size) != 3) {
+        std::cerr << "[ERROR] Failed to read dimension information from CAP file." << std::endl;
+        fclose(inputFile);
+        return false;
+    }
+
+    if (fscanf(inputFile, "%lf %lf", &metrics.UnitLengthWireCost, &metrics.UnitViaCost) != 2) {
+        std::cerr << "[ERROR] Failed to read wire and via costs." << std::endl;
+        fclose(inputFile);
+        return false;
+    }
     parameters.UnitViaCost = metrics.UnitViaCost;
-    cout << "UnitViaCost: " << parameters.UnitViaCost << endl;
-    double OFWeight;
-    metrics.OFWeight.reserve(dimension.n_layers);
-    for (int i = 0; i < dimension.n_layers; i++) {
-        fscanf(inputFile, "%lf", &OFWeight);
-        metrics.OFWeight.emplace_back(OFWeight);
+
+    metrics.OFWeight.resize(dimension.n_layers);
+    for (int i = 0; i < dimension.n_layers; ++i) {
+        if (fscanf(inputFile, "%lf", &metrics.OFWeight[i]) != 1) {
+            std::cerr << "[ERROR] Failed to read overflow weights." << std::endl;
+            fclose(inputFile);
+            return false;
+        }
     }
-    dimension.hEdge.reserve(dimension.x_size);
-    int hEdge;
-    for (int i = 0; i < dimension.x_size - 1; i++) {
-        fscanf(inputFile, "%d", &hEdge);
-        dimension.hEdge.emplace_back(hEdge);
+
+    dimension.hEdge.resize(dimension.x_size - 1);
+    for (int& hEdge : dimension.hEdge) {
+        if (fscanf(inputFile, "%d", &hEdge) != 1) {
+            std::cerr << "[ERROR] Failed to read horizontal edges." << std::endl;
+            fclose(inputFile);
+            return false;
+        }
     }
-    dimension.vEdge.reserve(dimension.y_size);
-    int vEdge;
-    for (int i = 0; i < dimension.y_size - 1; i++) {
-        fscanf(inputFile, "%d", &vEdge);
-        dimension.vEdge.emplace_back(vEdge);
+
+    dimension.vEdge.resize(dimension.y_size - 1);
+    for (int& vEdge : dimension.vEdge) {
+        if (fscanf(inputFile, "%d", &vEdge) != 1) {
+            std::cerr << "[ERROR] Failed to read vertical edges." << std::endl;
+            fclose(inputFile);
+            return false;
+        }
     }
+
     char name[1000];
-    for (int i = 0; i < dimension.n_layers; i++) {
+    for (int i = 0; i < dimension.n_layers; ++i) {
         Layer layer;
         layer.id = i;
-        fscanf(inputFile, "%s %d %lf", name, &layer.direction, &layer.minLength);
-        vector<vector<double>> cap(dimension.y_size, vector<double>(dimension.x_size, 0));
-        for (int i = 0; i < dimension.y_size; i++) {
-            for (int j = 0; j < dimension.x_size; j++) {
-                fscanf(inputFile, "%lf", &cap[i][j]);
+
+        if (fscanf(inputFile, "%s %d %lf", name, &layer.direction, &layer.minLength) != 3) {
+            std::cerr << "[ERROR] Failed to read layer information." << std::endl;
+            fclose(inputFile);
+            return false;
+        }
+
+        layer.capacity.resize(dimension.y_size, std::vector<double>(dimension.x_size, 0.0));
+        for (int y = 0; y < dimension.y_size; ++y) {
+            for (int x = 0; x < dimension.x_size; ++x) {
+                if (fscanf(inputFile, "%lf", &layer.capacity[y][x]) != 1) {
+                    std::cerr << "[ERROR] Failed to read layer capacity." << std::endl;
+                    fclose(inputFile);
+                    return false;
+                }
             }
         }
-        layer.capacity = cap;
-        layers.push_back(layer);
+        layers.push_back(std::move(layer));
     }
+
     fclose(inputFile);
+
+    // print out the read information
+    std::cout << "=====================================" << std::endl;
+    std::cout << "[INFO] Number of layers: " << dimension.n_layers << std::endl;
+    std::cout << "[INFO] Grid dimension: " << dimension.x_size << " x " << dimension.y_size << std::endl;
+    std::cout << "[INFO] Unit Length Wire Cost: " << metrics.UnitLengthWireCost << std::endl;
+    std::cout << "[INFO] Unit Via Cost: " << metrics.UnitViaCost << std::endl;
+    std::cout << "[INFO] Overflow Weights: ";
+    for (int i = 0; i < dimension.n_layers; ++i) {
+        std::cout << metrics.OFWeight[i] << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "=====================================" << std::endl;
+
     return true;
 }
 
-void replaceChars(char* str) {
-    while (*str != '\0') {
-        if (*str == '[' || *str == ']' || *str == '(' || *str == ')') {
-            *str = ' ';
-        }
-        str++;
-    }
-}
-
-bool Design::readNet(const string& filename) {
-    vector<Net> nets;
-    vector<Pin> pins;
-    vector<Point> points;
-
-    char net_name[1000];
-
-    int net_id = 0;
-    int pin_id = 0;
-    int point_id = 0;
-
+bool Design::readNet(const std::string& filename) {
     FILE* inputFile = fopen(filename.c_str(), "r");
-    char line[1000];
-    if (inputFile == NULL) {
-        printf("Error opening file.\n");
+    if (!inputFile) {
+        std::cerr << "[ERROR] Failed to open NET file: " << filename << std::endl;
         return false;
     }
+
+    std::vector<Net> nets;
+    std::vector<Pin> pins;
+    std::vector<Point> points;
+
+    char line[1000];
+    int net_id = 0, pin_id = 0, point_id = 0;
+
     while (fgets(line, sizeof(line), inputFile)) {
-        size_t ln = strlen(line) - 1;
-        if (line[ln] == '\n')
-            line[ln] = '\0';
-        string str(line);
-        Net net(net_id, str);
-        vector<int> pin_ids;
-        fgets(line, sizeof(line), inputFile);  // skip the first line "(\n"
+        if (line[strlen(line) - 1] == '\n') line[strlen(line) - 1] = '\0';
+
+        std::string netName(line);
+        Net net(net_id++, netName);
+        std::vector<int> pin_ids;
+
+        if (!fgets(line, sizeof(line), inputFile)) break; // Skip "(\n"
         while (fgets(line, sizeof(line), inputFile)) {
-            string s(line);
-            s.erase(remove(s.begin(), s.end(), ' '), s.end());
-            if (strcmp(s.c_str(), ")\n") == 0) {  // end of net
-                break;
-            }
-            Pin pin(pin_id++, net_id);
-            vector<int> point_ids;
+            std::string pinLine(line);
+            pinLine.erase(std::remove(pinLine.begin(), pinLine.end(), ' '), pinLine.end());
+
+            if (pinLine == ")\n" || pinLine == ")") break;
+
+            Pin pin(pin_id++, net.id);
+            std::vector<int> point_ids;
 
             char* token = strtok(line, ", \t\n");
-            pin.name = token;
-            token = strtok(NULL, ", \t\n");
-            pin.slack = atof(token);
-            token = strtok(NULL, ", \t\n");
+            pin.name = token ? token : "";
 
+            token = strtok(nullptr, ", \t\n");
+            pin.slack = token ? std::atof(token) : 0.0;
+
+            token = strtok(nullptr, ", \t\n");
             replaceChars(token);
 
-            int layer, x, y;
-            while (token != NULL) {
-                layer = atoi(token);
-                token = strtok(NULL, " \t\n");
-                if (token == NULL)
-                    break;
-                x = atoi(token);
-                token = strtok(NULL, " \t\n");
-                if (token == NULL)
-                    break;
-                y = atoi(token);
-                token = strtok(NULL, " \t\n");
-                Point point(point_id++, net_id, layer, x, y);
-                point_ids.push_back(point.id);
-                points.emplace_back(point);
+            while (token) {
+                int layer = std::atoi(token);
+                token = strtok(nullptr, " \t\n");
+                if (!token) break;
+                int x = std::atoi(token);
+                token = strtok(nullptr, " \t\n");
+                if (!token) break;
+                int y = std::atoi(token);
+                token = strtok(nullptr, " \t\n");
+
+                points.emplace_back(point_id++, net.id, layer, x, y);
+                point_ids.push_back(point_id - 1);
             }
-            pin.point_ids = point_ids;
-            pin_ids.push_back(pin.id);
-            pins.emplace_back(pin);
+
+            pin.point_ids = std::move(point_ids);
+            pins.push_back(std::move(pin));
+            pin_ids.push_back(pins.back().id);
         }
-        net.pin_ids = pin_ids;
-        nets.emplace_back(net);
-        net_id++;
+
+        net.pin_ids = std::move(pin_ids);
+        nets.push_back(std::move(net));
     }
 
     netlist.n_nets = nets.size();
     netlist.n_pins = pins.size();
     netlist.n_points = points.size();
-    netlist.nets = nets;
-    netlist.pins = pins;
-    netlist.points = points;
+    netlist.nets = std::move(nets);
+    netlist.pins = std::move(pins);
+    netlist.points = std::move(points);
 
-    cout << "Number of nets: " << netlist.n_nets << endl;
-    cout << "Number of pins: " << netlist.n_pins << endl;
-    cout << "Number of points: " << netlist.n_points << endl;
+    std::cout << "=====================================" << std::endl;
+    std::cout << "[INFO] Number of nets: " << netlist.n_nets << std::endl;
+    std::cout << "[INFO] Number of pins: " << netlist.n_pins << std::endl;
+    std::cout << "[INFO] Number of points: " << netlist.n_points << std::endl;
+    std::cout << "=====================================" << std::endl;
 
     fclose(inputFile);
     return true;
+}
+
+void Design::replaceChars(char* str) {
+    while (str && *str) {
+        if (*str == '[' || *str == ']' || *str == '(' || *str == ')') {
+            *str = ' ';
+        }
+        ++str;
+    }
 }

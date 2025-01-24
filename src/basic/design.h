@@ -1,40 +1,50 @@
-// design.h
 #ifndef DESIGN_H
 #define DESIGN_H
 
 #include <string>
 #include <vector>
+#include <chrono>
+#include <iostream>
 
 #include "../global.h"
 #include "dimension.h"
 #include "layer.h"
 #include "metrics.h"
 #include "netlist.h"
-#include <chrono>
-
-using namespace std;
 
 class Design {
-   public:
-    Design(Parameters& params)
+public:
+    explicit Design(Parameters& params)
         : parameters(params) {
-        auto t = std::chrono::high_resolution_clock::now();
-        readCap(params.cap_file);
-        cout << "USED TIME FOR READCAP:" <<  std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - t).count() << std::endl;
-        t = std::chrono::high_resolution_clock::now();
-        readNet(params.net_file);
-        cout << "USED TIME FOR READNET:" <<  std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - t).count() << std::endl;
+        auto start = std::chrono::high_resolution_clock::now();
+        if (readCap(params.cap_file)) {
+            std::cout << "[INFO] Time taken to read CAP: "
+                      << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count()
+                      << " seconds." << std::endl;
+        }
+        
+        start = std::chrono::high_resolution_clock::now();
+        if (readNet(params.net_file)) {
+            std::cout << "[INFO] Time taken to read NET: "
+                      << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count()
+                      << " seconds." << std::endl;
+        }
     }
-    ~Design();
 
-    // private:
+    ~Design() = default;
+
+    // Member functions
+    bool readCap(const std::string& filename);
+    bool readNet(const std::string& filename);
+
+    void replaceChars(char* str);
+
+    // Member variables
     Parameters& parameters;
     NetList netlist;
-    vector<Layer> layers;
+    std::vector<Layer> layers;
     Dimension dimension;
     Metrics metrics;
-    bool readCap(const string& filename);
-    bool readNet(const string& filename);
 };
 
 #endif  // DESIGN_H
