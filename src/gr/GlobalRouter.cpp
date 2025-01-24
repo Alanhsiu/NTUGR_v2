@@ -50,31 +50,7 @@ void GlobalRouter::route() {
     omp_lock_t lock;
     omp_init_lock(&lock);
 
-    /* cut down the most corner
-        the capacity is stored in this.gridgraph.graphedges.capacity, and
-        the net is stored in this.nets
-        take 1/4 corner as example
-    */
-    int x_bound = gridGraph.xSize/2;
-    int y_bound = gridGraph.ySize/2;
-    vector<vector<vector<double>>> cap(gridGraph.nLayers, vector<vector<double>>(x_bound, vector<double>(y_bound)));
-    for(int i=0; i<(int)gridGraph.nLayers; i++){
-        for(int j=0; j<x_bound; j++){
-            for(int k=0; k<y_bound; k++){
-                cap[i][j][k] = gridGraph.graphEdges[i][j][k].capacity;
-            }
-        }
-    } // this cap is ready to be written to file
-
-    write_partial_cap(cap);
-
-    /* for net:
-        should be obtained from the "routingDag" attribute in PatternRoute
-    */
-   std::vector<std::pair<Point, Point>> extracted_nets;
-
-
-// #pragma omp parallel for
+#pragma omp parallel for
     for (int i = 0; i < threadNum; ++i) {
         for (int j = 0; j < nonoverlapNetIndices[i].size(); ++j) {
             int netIndex = nonoverlapNetIndices[i][j];
@@ -83,10 +59,6 @@ void GlobalRouter::route() {
             patternRoute.constructSteinerTree();
             omp_unset_lock(&lock);
             patternRoute.constructRoutingDAG();
-            if(patternRoute.net.getName() == "i_tile/inst_data_o[18]"){
-                cout << "i_tile/inst_data_o[18]" << endl;
-            }
-            patternRoute.extractNet(extracted_nets, x_bound, y_bound);
             patternRoute.run();
             std::shared_ptr<GRTreeNode> tree = nets[netIndex].getRoutingTree();
             gridGraph.commitTree(tree);
@@ -101,16 +73,10 @@ void GlobalRouter::route() {
         PatternRoute patternRoute(nets[netIndex], gridGraph, parameters);
         patternRoute.constructSteinerTree();
         patternRoute.constructRoutingDAG();
-        patternRoute.extractNet(extracted_nets, x_bound, y_bound);
         patternRoute.run();
         std::shared_ptr<GRTreeNode> tree = nets[netIndex].getRoutingTree();
         gridGraph.commitTree(tree);
     }
-
-    // save the extracted_net 2-pin nets to a file
-    char buffer[50];
-    std::sprintf(buffer, "two_pin_net_%d_%d.txt", x_bound, y_bound);
-    writeExtractNetToFile(extracted_nets, string(buffer));
 
     std::cout << "non-parallel 1 for time elapsed: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - temp).count() << std::endl;
     temp = std::chrono::high_resolution_clock::now();
@@ -261,14 +227,13 @@ void GlobalRouter::writeExtractNetToFile(vector<std::pair<Point, Point>>& extrac
     outFile.close();
 }
 
-
 void GlobalRouter::write_partial_cap(vector<vector<vector<double>>>& cap) const {
     std::stringstream ss;
-    ss << gridGraph.nLayers << " " << (int)gridGraph.ySize/2 << " " << (int)gridGraph.xSize/2 << std::endl;
+    ss << gridGraph.nLayers << " " << (int)gridGraph.ySize / 2 << " " << (int)gridGraph.xSize / 2 << std::endl;
     for (int layerIndex = 0; layerIndex < gridGraph.nLayers; layerIndex++) {
         ss << layerIndex << std::endl;
-        for (int x = 0; x < (int)gridGraph.xSize/2; x++) {
-            for (int y = 0; y < (int)gridGraph.ySize/2; y++) {
+        for (int x = 0; x < (int)gridGraph.xSize / 2; x++) {
+            for (int y = 0; y < (int)gridGraph.ySize / 2; y++) {
                 ss << cap[layerIndex][x][y] << (x == gridGraph.xSize - 1 ? "" : " ");
             }
             ss << std::endl;
@@ -414,7 +379,7 @@ void GlobalRouter::write(std::string guide_file) {
 
     auto start = std::chrono::high_resolution_clock::now();
     int netSize = nets.size();
-// #pragma omp parallel for
+    // #pragma omp parallel for
     for (int i = 0; i < netSize; i++) {
         nets[i].getGuides();
     }

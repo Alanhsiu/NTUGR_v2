@@ -9,7 +9,7 @@ public:
     GlobalRouter(const Design& design, const Parameters& params);
     void route();
     void write(std::string guide_file = "");
-    std::string cap_file_name = "/home/b09901066/ISPD-NTUEE/NTUGR/heatmaps/partial_cap.txt";
+    std::string cap_file_name = "partial_cap.txt";
     
 // private:
     const Parameters& parameters;
