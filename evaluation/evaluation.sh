@@ -1,4 +1,5 @@
-data_list=("example")
+# data_list=("example")
+data_list=("ariane" "bsg_chip" "NV_NVDLA_partition_c")
 
 # root_path is the previous directory of the current directory
 root_path=$(dirname $(pwd))

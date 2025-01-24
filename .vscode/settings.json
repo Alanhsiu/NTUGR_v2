@@ -60,14 +60,6 @@
   },
   "cmake.sourceDirectory": "/home/b09901066/ISPD-NTUEE/NTUGR_v2/src",
   "cmake.debugConfig": {
-    "args": [
-      "-cap",
-      "../input/ariane.cap",
-      "-net",
-      "../input/ariane.net",
-      "-output",
-      "../output/ariane.route"
-    ]
     // "args": [
     //   "-cap",
     //   "../input/example.cap",
@@ -75,6 +67,30 @@
     //   "../input/example.net",
     //   "-output",
     //   "../output/example.route"
+    // ]
+    // "args": [
+    //   "-cap",
+    //   "../input/ariane.cap",
+    //   "-net",
+    //   "../input/ariane.net",
+    //   "-output",
+    //   "../output/ariane.route"
+    // ]
+    "args": [
+      "-cap",
+      "../input/bsg_chip.cap",
+      "-net",
+      "../input/bsg_chip.net",
+      "-output",
+      "../output/bsg_chip.route"
+    ]
+    // "args": [
+    //   "-cap",
+    //   "../input/NV_NVDLA_partition_c.cap",
+    //   "-net",
+    //   "../input/NV_NVDLA_partition_c.net",
+    //   "-output",
+    //   "../output/NV_NVDLA_partition_c.route"
     // ]
   }
 }
