@@ -38,6 +38,8 @@ public:
 
     int id;
     int net_id;
+    double slack;
+    string name;
     vector<int> point_ids;
 };
 
