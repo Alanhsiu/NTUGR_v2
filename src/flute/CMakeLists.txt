@@ -1,4 +1,5 @@
 # src/flute/CMakeLists.txt
+add_compile_options(-w)
 
 cmake_minimum_required(VERSION 3.10)
 project(flute)
