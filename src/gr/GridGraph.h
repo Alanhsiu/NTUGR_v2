@@ -57,7 +57,7 @@ public:
     void updateWireCostView(GridGraphView<CostT>& view, std::shared_ptr<GRTreeNode> routingTree) const;
 
     // For visualization
-    void write(const std::string heatmap_file="heatmap.txt") const;
+    void writeHeatmap(const std::string heatmap_file="heatmap.txt") const;
     void writeCapacity(const std::string heatmap_file="capacity.txt") const;
     
 // private:

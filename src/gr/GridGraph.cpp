@@ -437,8 +437,8 @@ void GridGraph::updateWireCostView(GridGraphView<CostT>& view, std::shared_ptr<G
     });
 }
 
-void GridGraph::write(const std::string heatmap_file) const {
-    std::cout << "writing heatmap to file..." << std::endl;
+void GridGraph::writeHeatmap(const std::string heatmap_file) const {
+    std::cout << "[INFO] Writing heatmap to file..." << std::endl;
     std::stringstream ss;
     
     ss << nLayers << " " << xSize << " " << ySize << " " << std::endl;
@@ -459,7 +459,7 @@ void GridGraph::write(const std::string heatmap_file) const {
 }
 
 void GridGraph::writeCapacity(const std::string heatmap_file) const {
-    std::cout << "writing capacity heatmap to file..." << std::endl;
+    std::cout << "[INFO] Writing capacity heatmap to file..." << std::endl;
     std::stringstream ss;
 
     ss << nLayers << " " << xSize << " " << ySize << " " << std::endl;
